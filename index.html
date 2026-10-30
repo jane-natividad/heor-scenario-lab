@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HEOR Scenario Lab — Interactive Cost-Effectiveness Modelling | Jane Natividad</title>
+<meta name="description" content="A transparent two-strategy cost-effectiveness model: change costs, QALYs, horizon, discounting and willingness to pay, then see incremental results, net monetary benefit, one-way and probabilistic sensitivity analysis.">
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --accent: #0071e3; --accent-soft: #e8f2ff; --accent-border: #cce2ff;
+    --ink: #1d1d1f; --ink-soft: #48484a; --muted: #6e6e73;
+    --hairline: #e5e5e7; --panel: #f5f5f7; --bg: #ffffff;
+    --good: #1a7f4e; --good-soft: #e7f6ee;
+    --warn: #9a6b00; --warn-soft: #fff6e0;
+    --bad: #b3261e; --bad-soft: #fdecea;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; }
+  .wrap { max-width: 800px; margin: 0 auto; padding: 56px 24px 80px; }
+  .back-link { display: inline-block; font-size: 12px; color: var(--muted); text-decoration: none; margin-bottom: 22px; }
+  .back-link:hover { color: var(--accent); }
+  .eyebrow { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 14px; }
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 14px; line-height: 1.18; text-wrap: balance; }
+  h2 { font-size: 17px; font-weight: 650; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .byline { font-size: 12.8px; color: var(--muted); margin: 0 0 28px; }
+  .byline a { color: var(--muted); }
+  p { font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); margin: 0 0 16px; }
+  .lede { font-size: 15.5px; line-height: 1.6; color: var(--ink); background: var(--panel); border-radius: 14px; padding: 20px 24px; margin: 0 0 28px; }
+  .section-label { font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 36px 0 14px; }
+  .section-sub { font-size: 13px; color: var(--ink-soft); margin: -6px 0 14px; line-height: 1.55; }
+  .panel { background: var(--panel); border-radius: 14px; padding: 20px 22px; margin: 0 0 18px; }
+  .card { border: 1px solid var(--hairline); border-radius: 12px; padding: 14px 16px; background: #fff; }
+  .card.top { border-color: var(--accent-border); background: var(--accent-soft); }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .pipeline { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+  .pipe-step { flex: 1 1 auto; min-width: 130px; background: var(--panel); border: 1px solid var(--hairline); border-radius: 10px; padding: 10px 12px; font-size: 11.3px; color: var(--ink-soft); line-height: 1.4; }
+  .pipe-step b { display: block; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
+  .pipeline-note { font-size: 11.5px; color: var(--muted); margin: 0 0 24px; }
+  .btn { font-size: 12px; font-weight: 600; color: var(--accent); background: #fff; border: 1px solid var(--accent-border); border-radius: 8px; padding: 7px 13px; cursor: pointer; font-family: inherit; }
+  .btn:hover { background: var(--accent-soft); }
+  .btn.primary { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .btn.primary:hover { background: #005bbf; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font-size: 11.8px; color: var(--accent); background: #fff; border: 1px solid var(--accent-border); border-radius: 999px; padding: 6px 13px; cursor: pointer; font-family: inherit; text-align: left; }
+  .chip:hover { background: var(--accent-soft); }
+  .chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tag { display: inline-block; font-size: 10.3px; font-weight: 700; letter-spacing: 0.04em; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+  .tag.good { color: var(--good); background: var(--good-soft); }
+  .tag.warn { color: var(--warn); background: var(--warn-soft); }
+  .tag.bad { color: var(--bad); background: var(--bad-soft); }
+  .tag.info { color: var(--accent); background: var(--accent-soft); }
+  .tag.mute { color: var(--muted); background: var(--panel); }
+  .bar-track { height: 7px; background: var(--hairline); border-radius: 999px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.25s ease; }
+  input[type=text], input[type=password], select, textarea { font-family: inherit; font-size: 13px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--hairline); background: #fff; color: var(--ink); }
+  textarea { width: 100%; resize: vertical; line-height: 1.5; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .gov-grid { display: flex; flex-direction: column; gap: 10px; margin: 0 0 32px; }
+  .gov-item { display: flex; gap: 12px; border: 1px solid var(--hairline); border-radius: 12px; padding: 13px 16px; }
+  .gov-icon { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; }
+  .gov-text b { display: block; font-size: 12.8px; color: var(--ink); margin-bottom: 2px; }
+  .gov-text span { font-size: 12.2px; color: var(--ink-soft); line-height: 1.55; }
+  .not-list { font-size: 12.5px; color: var(--ink-soft); line-height: 1.7; margin: 0 0 32px; padding-left: 20px; }
+  .not-list li { margin-bottom: 6px; }
+  .why { font-size: 13.3px; font-style: italic; color: var(--ink); background: var(--panel); border-radius: 14px; padding: 18px 22px; margin: 0 0 32px; line-height: 1.58; }
+  .disclosure { font-size: 11.5px; line-height: 1.55; color: var(--muted); background: var(--panel); border-radius: 10px; padding: 12px 16px; margin: 0 0 32px; }
+  pre.out { white-space: pre-wrap; word-break: break-word; background: var(--panel); border-radius: 10px; padding: 14px 16px; font-size: 12px; line-height: 1.6; color: var(--ink-soft); font-family: ui-monospace, "SF Mono", Menlo, monospace; margin: 0; }
+  table.grid { width: 100%; border-collapse: collapse; font-size: 12.3px; }
+  table.grid th { text-align: left; font-size: 10.3px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 8px 8px; border-bottom: 1px solid var(--hairline); }
+  table.grid td { padding: 9px 8px; border-bottom: 1px solid var(--hairline); color: var(--ink-soft); vertical-align: top; }
+  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  footer { border-top: 1px solid var(--hairline); padding-top: 20px; font-size: 12px; color: var(--muted); }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  @media (max-width: 480px) { .wrap { padding: 40px 16px 60px; } h1 { font-size: 24px; } }
+  .sl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; }
+  .sl-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+  .sl-row label { font-size: 12.6px; font-weight: 600; color: var(--ink); }
+  .sl-val { font-size: 12.5px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .sl-row input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+  .sl-hint { grid-column: 1 / -1; font-size: 11px; color: var(--muted); margin-top: -2px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0 0 14px; }
+  .kpi { border: 1px solid var(--hairline); border-radius: 12px; padding: 12px 14px; background: #fff; }
+  .kpi .k-l { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .kpi .k-v { font-size: 22px; font-weight: 700; color: var(--ink); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi .k-s { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .kpi.good .k-v { color: var(--good); } .kpi.warn .k-v { color: var(--warn); } .kpi.bad .k-v { color: var(--bad); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 11.5px; color: var(--ink-soft); margin: 6px 0 0; }
+  .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .bars .bar-row { display: grid; grid-template-columns: 210px 1fr 64px; gap: 10px; align-items: center; font-size: 12.5px; color: var(--ink-soft); margin: 7px 0; }
+  .bars .bar-wrap { position: relative; height: 16px; background: var(--panel); border-radius: 4px; }
+  .bars .bar-wrap .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: #c7c7cc; }
+  .bars .bar-wrap span { position: absolute; top: 0; height: 100%; border-radius: 4px; }
+  .bars .bar-num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .model-card { font-size: 12.8px; line-height: 1.65; color: var(--ink-soft); }
+  .model-card h3 { font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink); margin: 16px 0 6px; }
+  .model-card h3:first-child { margin-top: 0; }
+  .model-card code, .eq { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; background: var(--panel); border-radius: 5px; padding: 1px 6px; color: var(--ink); }
+  .eq { display: block; padding: 8px 12px; margin: 6px 0; white-space: pre-wrap; }
+  .row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+  .note { font-size: 11.8px; color: var(--muted); line-height: 1.5; }
+  @media (max-width: 620px) { .sl-grid { grid-template-columns: 1fr; } .bars .bar-row { grid-template-columns: 1fr 1fr 52px; } }
+
+  .inputs { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .inputs th { text-align: left; font-size: 10.3px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 6px; border-bottom: 1px solid var(--hairline); }
+  .inputs td { padding: 6px; border-bottom: 1px solid var(--hairline); color: var(--ink-soft); }
+  .inputs input { width: 100%; max-width: 120px; padding: 6px 8px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .verdict { font-size: 14px; line-height: 1.6; color: var(--ink); }
+  .verdict b { color: var(--ink); }
+  .quad { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-right: 6px; }
+  .tabs2 { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+  .ow-in { width: 90px; padding: 4px 6px; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="https://jane-natividad.github.io">&larr; Back to portfolio</a>
+  <div class="eyebrow">HEOR · Market Access · Modelling · Working Prototype</div>
+  <h1>HEOR Scenario Lab: which assumptions actually drive the cost-effectiveness result?</h1>
+  <p class="byline">Jane Natividad &nbsp;&middot;&nbsp; <a href="https://jane-natividad.github.io">jane-natividad.github.io</a> &nbsp;&middot;&nbsp; <a href="https://github.com/jane-natividad/heor-scenario-lab">View on GitHub</a></p>
+
+  <div class="lede">A transparent cohort-level model comparing a <b>hypothetical new intervention</b> with a <b>hypothetical comparator</b>. Change prices, other healthcare costs, quality of life, time horizon, discounting and the willingness-to-pay threshold. The lab then calculates incremental cost, incremental QALYs, the ICER (only where it means something) and <b>incremental net monetary benefit</b>, and shows which assumptions move the result most.</div>
+
+  <div class="section-label">1 · Assumptions (all illustrative)</div>
+  <div class="card scroll-x"><table class="inputs" id="inputs"></table></div>
+  <div class="panel" style="margin-top:10px"><div class="sl-grid" id="globals"></div></div>
+  <p class="note"><b>Perspective:</b> healthcare payer. <b>Included costs:</b> treatment acquisition plus other direct healthcare costs, entered as <b>annual</b> amounts. <b>Outcomes:</b> QALYs = annual utility × years, discounted. <b>Currency:</b> generic "$". Every number is illustrative, not drawn from any real product, trial or HTA submission.</p>
+
+  <div class="section-label">2 · Results</div>
+  <div class="kpis" id="kpis"></div>
+  <div class="card verdict" id="verdict"></div>
+  <div class="card scroll-x" style="margin-top:10px"><table class="grid" id="totals"></table></div>
+  <div class="card" style="margin-top:10px"><div class="note" style="margin-bottom:6px">Cost-effectiveness plane: incremental QALYs (x) vs incremental cost (y). The dashed line is the willingness-to-pay threshold. Points below it have positive net monetary benefit.</div><div id="plane"></div></div>
+
+  <div class="section-label">3 · Scenarios</div>
+  <p class="section-sub">Each preset starts from the base case and changes one assumption, so the scenarios stay comparable. Custom scenarios save whatever is currently set.</p>
+  <div class="row-actions" id="presets"></div>
+  <div class="row-actions"><input type="text" id="scen-name" placeholder="Name this scenario" style="flex:1;min-width:200px"><button class="btn primary" id="save-scen" type="button">Save current as scenario</button><button class="btn" id="reset" type="button">Reset to base case</button></div>
+  <div class="card scroll-x"><table class="grid" id="scen-table"><tr><td class="note">Saved scenarios appear here. The base case is saved automatically.</td></tr></table></div>
+
+  <div class="section-label">4 · One-way sensitivity analysis &amp; thresholds</div>
+  <p class="section-sub">Each parameter is moved alone to its low and high value; everything else stays at the current setting. Bars show the effect on incremental net monetary benefit. The threshold column shows the value at which INMB would equal 0 at the current willingness to pay, which is where the modelled result flips.</p>
+  <div class="card scroll-x"><table class="grid" id="ow"></table></div>
+  <div class="card bars" style="margin-top:10px" id="tornado"></div>
+
+  <div class="section-label">5 · Probabilistic sensitivity analysis</div>
+  <p class="section-sub">Draws every uncertain input from an explicit distribution 2,000 times (seeded, so reproducible). Costs: gamma. Utilities: beta. Spreads are <b>illustrative</b>, not estimated from data.</p>
+  <div class="panel"><div class="sl-grid" id="psa-ctl"></div><div class="row-actions" style="margin:12px 0 0"><button class="btn primary" id="psa-run" type="button">Run PSA (2,000 draws)</button><span class="note" id="psa-note"></span></div></div>
+  <div class="kpis" id="psa-kpis"></div>
+  <div class="card"><div class="note" style="margin-bottom:6px">PSA cost-effectiveness plane (each dot is one draw)</div><div id="psa-plane"></div></div>
+  <div class="card" style="margin-top:10px"><div class="note" style="margin-bottom:6px">Cost-effectiveness acceptability curve: the share of draws with positive INMB at each willingness-to-pay value</div><div id="ceac"></div></div>
+  <div class="card" style="margin-top:10px"><div class="note" style="margin-bottom:6px">Distribution of incremental net monetary benefit at the selected threshold</div><div id="inmb-hist"></div></div>
+
+  <div class="section-label">Model documentation</div>
+  <div class="card model-card">
+    <h3>Model structure</h3>
+    A deterministic, two-strategy, cohort-level model with annual cycles. For each strategy <i>s</i> and year <i>t</i> = 0 … H−1:
+    <span class="eq">Total cost_s  = Σ_t (treatment_s(t) + other_s) / (1 + r_c)^t      treatment_s(t) = annual price while t < treatment duration, else 0
+Total QALYs_s = Σ_t utility_s / (1 + r_o)^t
+ΔC = Cost_new − Cost_comp        ΔE = QALYs_new − QALYs_comp
+ICER = ΔC / ΔE  (reported only when ΔE ≠ 0, with its quadrant)
+INMB = WTP × ΔE − ΔC</span>
+    Discounting runs from the start of each year (year 0 undiscounted). Cost and outcome discount rates are set separately.
+    <h3>Perspective, horizon and costs</h3>
+    Healthcare payer perspective. Horizon of 1–30 years, as set. Annual treatment and other direct healthcare costs. Productivity and out-of-pocket costs are excluded.
+    <h3>QALY assumptions</h3>
+    Each strategy has one average utility per year, applied to the whole cohort for the full horizon. There's <b>no mortality or disease-state structure</b>, so both arms are assumed to survive the full horizon. That simplification is acceptable for a teaching model and not for a real submission.
+    <h3>Dominance and the ICER</h3>
+    <b>Dominant:</b> cheaper and more effective, so no ICER is needed. <b>Dominated:</b> dearer and less effective. <b>North-east:</b> dearer and more effective, so the ICER is compared with WTP. <b>South-west:</b> cheaper and less effective. The ICER is then savings per QALY lost, and the decision rule reverses (the new option is preferred only if the ICER is <i>above</i> WTP). When ΔE = 0 no ICER is shown. INMB is reported in every case and is the primary result. With more than two strategies, extended dominance would also need checking. This version only compares two.
+    <h3>Sensitivity analysis methods</h3>
+    <b>One-way:</b> each parameter is moved over a low–high range you can edit (default ±20%), and the threshold value for INMB = 0 is found by bisection. <b>Probabilistic:</b> annual costs are drawn from Gamma(mean, SE) and utilities from Beta(mean, SE) using method-of-moments, with SE as a share of the mean (costs) or an absolute value (utilities). Draws are independent. That's a simplifying assumption, since real inputs are often correlated.
+    <h3>Data provenance</h3>
+    All inputs and distributions are illustrative and invented for demonstration. None comes from a real product, trial or HTA dossier.
+    <h3>Validation requirements</h3>
+    For real use you'd need: inputs sourced from trials, real-world evidence and published utilities, with documented SEs; a disease model with survival and states; face validity reviewed by clinicians; verification of every equation, including a parallel spreadsheet rebuild; and cross-validation against published models.
+    <h3>Limitations</h3>
+    No survival or disease states, no half-cycle correction, independent PSA draws, and a single cohort average with no subgroups. A positive INMB here means "favourable under these assumptions at this threshold". It is <b>not</b> a reimbursement recommendation.
+  </div>
+
+  <div class="why">"An ICER on its own hides the story. Show the quadrant, the net benefit, and the price that would flip the result, and the conversation moves from 'is it cost-effective?' to 'what would it need to be true for it to be?'"</div>
+  <div class="disclosure">Prototype with synthetic, hypothetical treatment profiles. Not based on any real product, trial or HTA submission, and not a reimbursement, pricing or clinical recommendation.</div>
+  <footer>Built by <a href="https://jane-natividad.github.io">Jane Natividad</a>. No frameworks, no build step: a single static page and plain JavaScript, with seeded randomness so the PSA is reproducible.</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  /* ---------- shared simulation + chart toolkit (no libraries) ---------- */
+  function makeRng(seed) { // mulberry32: fast, seedable, reproducible
+    var a = seed >>> 0;
+    return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  function randNormal(rng) { var u = 0, v = 0; while (u === 0) u = rng(); while (v === 0) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function randGamma(rng, shape, scale) { // Marsaglia–Tsang
+    if (shape < 1) { var g = randGamma(rng, shape + 1, scale); return g * Math.pow(rng(), 1 / shape); }
+    var d = shape - 1 / 3, c = 1 / Math.sqrt(9 * d);
+    for (;;) { var x, v; do { x = randNormal(rng); v = 1 + c * x; } while (v <= 0); v = v * v * v; var u = rng();
+      if (u < 1 - 0.0331 * x * x * x * x) return d * v * scale; if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v * scale; }
+  }
+  function randPoisson(rng, lambda) {
+    if (lambda <= 0) return 0;
+    if (lambda > 30) return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * randNormal(rng)));
+    var L = Math.exp(-lambda), k = 0, p = 1; do { k++; p *= rng(); } while (p > L); return k - 1;
+  }
+  function quantile(sorted, q) { if (!sorted.length) return NaN; var i = (sorted.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i); return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo); }
+  function fmt(n, d) { return Number(n).toLocaleString("en-US", { maximumFractionDigits: d == null ? 0 : d, minimumFractionDigits: d == null ? 0 : d }); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // Chart: series = [{ points:[[x,y],...], color, width, dash, band:[[x,lo,hi],...] }], opts = {xLabel,yLabel,xMax,yMax,vlines:[{x,label,color}],hlines:[{y,label}]}
+  function lineChart(el, series, opts) {
+    var W = 720, H = 300, m = { l: 52, r: 16, t: 14, b: 40 };
+    var xs = [], ys = [];
+    series.forEach(function (s) { (s.points || []).forEach(function (p) { xs.push(p[0]); ys.push(p[1]); }); (s.band || []).forEach(function (b) { xs.push(b[0]); ys.push(b[2]); }); });
+    var xMax = opts.xMax || Math.max.apply(null, xs), yMax = opts.yMax || Math.max.apply(null, ys) * 1.08 || 1, xMin = opts.xMin || 0;
+    function X(x) { return m.l + (x - xMin) / (xMax - xMin) * (W - m.l - m.r); }
+    function Y(y) { return H - m.b - y / yMax * (H - m.t - m.b); }
+    var g = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(opts.title || "chart") + '" style="display:block;max-width:100%;height:auto">';
+    for (var i = 0; i <= 4; i++) { var yv = yMax * i / 4; g += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(yv) + '" y2="' + Y(yv) + '" stroke="#ececef"/><text x="' + (m.l - 8) + '" y="' + (Y(yv) + 4) + '" text-anchor="end" font-size="11" fill="#6e6e73">' + (opts.yFmt ? opts.yFmt(yv) : fmt(yv)) + '</text>'; }
+    var ticks = opts.xTicks || 6;
+    for (i = 0; i <= ticks; i++) { var xv = xMin + (xMax - xMin) * i / ticks; g += '<text x="' + X(xv) + '" y="' + (H - m.b + 18) + '" text-anchor="middle" font-size="11" fill="#6e6e73">' + (opts.xFmt ? opts.xFmt(xv) : fmt(xv)) + '</text>'; }
+    if (opts.xLabel) g += '<text x="' + ((m.l + W - m.r) / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" fill="#6e6e73">' + esc(opts.xLabel) + '</text>';
+    if (opts.yLabel) g += '<text x="12" y="' + ((m.t + H - m.b) / 2) + '" text-anchor="middle" font-size="11" fill="#6e6e73" transform="rotate(-90 12 ' + ((m.t + H - m.b) / 2) + ')">' + esc(opts.yLabel) + '</text>';
+    series.forEach(function (s) {
+      if (s.band && s.band.length) {
+        var up = s.band.map(function (b) { return X(b[0]) + "," + Y(b[2]); }).join(" "), dn = s.band.slice().reverse().map(function (b) { return X(b[0]) + "," + Y(b[1]); }).join(" ");
+        g += '<polygon points="' + up + " " + dn + '" fill="' + (s.bandColor || s.color) + '" opacity="' + (s.bandOpacity || 0.15) + '"/>';
+      }
+      if (s.area && s.points) { g += '<polygon points="' + X(s.points[0][0]) + "," + Y(0) + " " + s.points.map(function (p) { return X(p[0]) + "," + Y(p[1]); }).join(" ") + " " + X(s.points[s.points.length - 1][0]) + "," + Y(0) + '" fill="' + s.color + '" opacity="0.12"/>'; }
+      if (s.points) g += '<polyline fill="none" stroke="' + s.color + '" stroke-width="' + (s.width || 2.2) + '"' + (s.dash ? ' stroke-dasharray="' + s.dash + '"' : "") + ' points="' + s.points.map(function (p) { return X(p[0]) + "," + Y(p[1]); }).join(" ") + '"/>';
+    });
+    (opts.hlines || []).forEach(function (h) { g += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(h.y) + '" y2="' + Y(h.y) + '" stroke="' + (h.color || "#1d1d1f") + '" stroke-dasharray="4 4"/><text x="' + (W - m.r - 4) + '" y="' + (Y(h.y) - 6) + '" text-anchor="end" font-size="11" fill="' + (h.color || "#1d1d1f") + '">' + esc(h.label) + '</text>'; });
+    (opts.vlines || []).forEach(function (v) { if (v.x < xMin || v.x > xMax) return; g += '<line x1="' + X(v.x) + '" x2="' + X(v.x) + '" y1="' + m.t + '" y2="' + (H - m.b) + '" stroke="' + (v.color || "#b3261e") + '" stroke-dasharray="4 4"/><text x="' + (X(v.x) + 5) + '" y="' + (m.t + 12) + '" font-size="11" fill="' + (v.color || "#b3261e") + '">' + esc(v.label) + '</text>'; });
+    el.innerHTML = g + "</svg>";
+  }
+
+  // Histogram of values with optional marker lines
+  function histogram(el, values, opts) {
+    var W = 720, H = 240, m = { l: 44, r: 16, t: 14, b: 40 }, bins = opts.bins || 30;
+    var lo = opts.min != null ? opts.min : Math.min.apply(null, values), hi = opts.max != null ? opts.max : Math.max.apply(null, values);
+    if (hi === lo) hi = lo + 1;
+    var w = (hi - lo) / bins, counts = new Array(bins).fill(0);
+    values.forEach(function (v) { var b = Math.min(bins - 1, Math.max(0, Math.floor((v - lo) / w))); counts[b]++; });
+    var cMax = Math.max.apply(null, counts) || 1;
+    function X(x) { return m.l + (x - lo) / (hi - lo) * (W - m.l - m.r); }
+    var g = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(opts.title || "histogram") + '" style="display:block;max-width:100%;height:auto">';
+    counts.forEach(function (c, i) {
+      var x0 = lo + i * w, h = c / cMax * (H - m.t - m.b), col = opts.colorFn ? opts.colorFn(x0 + w / 2) : "#0071e3";
+      g += '<rect x="' + (X(x0) + 0.5) + '" y="' + (H - m.b - h) + '" width="' + Math.max(0, X(x0 + w) - X(x0) - 1) + '" height="' + h + '" fill="' + col + '" opacity="0.85"/>';
+    });
+    for (var i = 0; i <= 5; i++) { var xv = lo + (hi - lo) * i / 5; g += '<text x="' + X(xv) + '" y="' + (H - m.b + 18) + '" text-anchor="middle" font-size="11" fill="#6e6e73">' + (opts.xFmt ? opts.xFmt(xv) : fmt(xv)) + '</text>'; }
+    if (opts.xLabel) g += '<text x="' + ((m.l + W - m.r) / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" fill="#6e6e73">' + esc(opts.xLabel) + '</text>';
+    (opts.marks || []).forEach(function (mk, k) { if (mk.x < lo || mk.x > hi) return; g += '<line x1="' + X(mk.x) + '" x2="' + X(mk.x) + '" y1="' + m.t + '" y2="' + (H - m.b) + '" stroke="' + (mk.color || "#1d1d1f") + '" stroke-dasharray="4 4"/><text x="' + (X(mk.x) + 4) + '" y="' + (m.t + 12 + k * 14) + '" font-size="11" fill="' + (mk.color || "#1d1d1f") + '">' + esc(mk.label) + '</text>'; });
+    el.innerHTML = g + "</svg>";
+  }
+
+  // Slider helper: builds a labelled range input bound to state[key]
+  function slider(container, cfg, state, onChange) {
+    var row = document.createElement("div"); row.className = "sl-row";
+    var id = cfg.id || cfg.key;
+    row.innerHTML = '<label for="sl-' + id + '">' + esc(cfg.label) + '</label><span class="sl-val" id="sv-' + id + '"></span><input type="range" id="sl-' + id + '" min="' + cfg.min + '" max="' + cfg.max + '" step="' + cfg.step + '" value="' + state[cfg.key] + '">' + (cfg.hint ? '<div class="sl-hint">' + esc(cfg.hint) + '</div>' : "");
+    var input = row.querySelector("input"), val = row.querySelector(".sl-val");
+    function show() { val.textContent = cfg.fmt ? cfg.fmt(state[cfg.key]) : state[cfg.key]; }
+    input.addEventListener("input", function () { state[cfg.key] = parseFloat(input.value); show(); onChange(); });
+    show(); container.appendChild(row);
+    return { set: function (v) { state[cfg.key] = v; input.value = v; show(); } };
+  }
+
+  var BASE = { txNew: 18000, txComp: 4000, othNew: 6000, othComp: 9000, uNew: 0.78, uComp: 0.72, durNew: 5, durComp: 10, H: 10, rc: 3.5, ro: 3.5, wtp: 50000 };
+  var p = Object.assign({}, BASE), psa = { seCost: 20, seU: 0.03 }, scenarios = [];
+  var $ = function (id) { return document.getElementById(id); };
+  function money(x) { var s = x < 0 ? "−$" : "$"; return s + fmt(Math.abs(x)); }
+
+  /* ---------- core model ---------- */
+  function model(q) {
+    var cN = 0, cC = 0, eN = 0, eC = 0;
+    for (var t = 0; t < q.H; t++) {
+      var dc = 1 / Math.pow(1 + q.rc / 100, t), de = 1 / Math.pow(1 + q.ro / 100, t);
+      cN += ((t < q.durNew ? q.txNew : 0) + q.othNew) * dc; cC += ((t < q.durComp ? q.txComp : 0) + q.othComp) * dc;
+      eN += q.uNew * de; eC += q.uComp * de;
+    }
+    var dC = cN - cC, dE = eN - eC;
+    return { cN: cN, cC: cC, eN: eN, eC: eC, dC: dC, dE: dE, inmb: q.wtp * dE - dC, icer: Math.abs(dE) > 1e-9 ? dC / dE : null, quad: quadrant(dC, dE) };
+  }
+  function quadrant(dC, dE) {
+    var e = 1e-9;
+    if (Math.abs(dE) <= e) return { id: "zero", label: "No QALY difference", color: "mute" };
+    if (dE > 0 && dC <= 0) return { id: "dominant", label: "Dominant (cheaper, more effective)", color: "good" };
+    if (dE < 0 && dC >= 0) return { id: "dominated", label: "Dominated (dearer, less effective)", color: "bad" };
+    if (dE > 0) return { id: "NE", label: "North-east (dearer, more effective)", color: "info" };
+    return { id: "SW", label: "South-west (cheaper, less effective)", color: "warn" };
+  }
+
+  /* ---------- inputs ---------- */
+  var ROWS = [
+    ["Treatment cost per patient (annual)", "txNew", "txComp", 100], ["Treatment duration (years)", "durNew", "durComp", 1],
+    ["Other healthcare costs (annual)", "othNew", "othComp", 100], ["Utility (QALY weight per year, 0–1)", "uNew", "uComp", 0.01]
+  ];
+  function renderInputs() {
+    $("inputs").innerHTML = "<tr><th>Annual input</th><th>New intervention</th><th>Comparator</th></tr>" + ROWS.map(function (r) {
+      return "<tr><td>" + r[0] + '</td><td><input type="number" step="' + r[3] + '" data-k="' + r[1] + '" value="' + p[r[1]] + '"></td><td><input type="number" step="' + r[3] + '" data-k="' + r[2] + '" value="' + p[r[2]] + '"></td></tr>';
+    }).join("");
+    $("inputs").querySelectorAll("input").forEach(function (inp) { inp.addEventListener("input", function () { var v = parseFloat(inp.value); if (isFinite(v)) { p[inp.dataset.k] = v; clamp(); renderAll(); } }); });
+  }
+  function clamp() { ["uNew", "uComp"].forEach(function (k) { p[k] = Math.max(0, Math.min(1, p[k])); }); }
+  var G = [
+    { key: "H", label: "Time horizon", min: 1, max: 30, step: 1, fmt: function (v) { return v + " years"; } },
+    { key: "wtp", label: "Willingness-to-pay threshold", min: 0, max: 150000, step: 1000, fmt: function (v) { return money(v) + "/QALY"; } },
+    { key: "rc", label: "Discount rate, costs", min: 0, max: 8, step: 0.5, fmt: function (v) { return v + "%"; } },
+    { key: "ro", label: "Discount rate, outcomes", min: 0, max: 8, step: 0.5, fmt: function (v) { return v + "%"; } }
+  ];
+  var gctl = {};
+  function renderGlobals() { $("globals").innerHTML = ""; G.forEach(function (c) { gctl[c.key] = slider($("globals"), c, p, renderAll); }); }
+
+  /* ---------- results ---------- */
+  function kpi(l, v, s, c) { return '<div class="kpi ' + (c || "") + '"><div class="k-l">' + l + '</div><div class="k-v">' + v + '</div><div class="k-s">' + s + "</div></div>"; }
+  function icerText(r) {
+    if (r.quad.id === "zero") return "Not defined (ΔQALY = 0)";
+    if (r.quad.id === "dominant") return "Dominant";
+    if (r.quad.id === "dominated") return "Dominated";
+    return money(r.icer) + "/QALY";
+  }
+  function renderResults() {
+    var r = model(p);
+    $("kpis").innerHTML = kpi("Incremental cost", money(r.dC), "new − comparator, discounted") + kpi("Incremental QALYs", (r.dE >= 0 ? "+" : "") + r.dE.toFixed(3), "discounted") +
+      kpi("ICER", icerText(r), r.quad.id === "SW" ? "savings per QALY lost" : r.quad.id === "NE" ? "extra cost per QALY gained" : "see quadrant") +
+      kpi("Incremental NMB", money(r.inmb), "at " + money(p.wtp) + "/QALY", r.inmb > 0 ? "good" : r.inmb < 0 ? "bad" : "");
+    var v = '<span class="quad tag ' + r.quad.color + '">' + r.quad.label + "</span> ";
+    if (r.quad.id === "zero") v += "The two strategies give the same QALYs, so an ICER can't be calculated. The comparison is purely about cost: the new intervention costs <b>" + money(r.dC) + "</b> more per patient over " + p.H + " years.";
+    else if (r.quad.id === "dominant") v += "Under these assumptions the new intervention is cheaper <i>and</i> yields more QALYs. INMB is positive at any threshold.";
+    else if (r.quad.id === "dominated") v += "Under these assumptions the new intervention costs more <i>and</i> yields fewer QALYs. INMB is negative at any threshold.";
+    else if (r.quad.id === "NE") v += "Each additional QALY costs <b>" + money(r.icer) + "</b>. At the selected threshold of " + money(p.wtp) + "/QALY, INMB is <b>" + (r.inmb >= 0 ? "positive" : "negative") + "</b> (" + money(r.inmb) + " per patient) under these assumptions.";
+    else v += "The new intervention saves <b>" + money(-r.dC) + "</b> but loses <b>" + (-r.dE).toFixed(3) + "</b> QALYs, which is " + money(r.icer) + " saved per QALY lost. Here the rule reverses: the new option is favoured only if savings per QALY lost exceed the threshold. INMB is <b>" + money(r.inmb) + "</b>.";
+    v += ' <span class="note">This describes the model output under illustrative assumptions. It is not a reimbursement recommendation.</span>';
+    $("verdict").innerHTML = v;
+    $("totals").innerHTML = "<tr><th></th><th>New intervention</th><th>Comparator</th><th>Difference</th></tr>" +
+      "<tr><td><b style='color:var(--ink)'>Total cost over " + p.H + " years (discounted)</b></td><td>" + money(r.cN) + "</td><td>" + money(r.cC) + "</td><td>" + money(r.dC) + "</td></tr>" +
+      "<tr><td>Annual cost in year 1 (undiscounted)</td><td>" + money((p.durNew > 0 ? p.txNew : 0) + p.othNew) + "</td><td>" + money((p.durComp > 0 ? p.txComp : 0) + p.othComp) + "</td><td>" + money((p.durNew > 0 ? p.txNew : 0) + p.othNew - (p.durComp > 0 ? p.txComp : 0) - p.othComp) + "</td></tr>" +
+      "<tr><td><b style='color:var(--ink)'>Total QALYs (discounted)</b></td><td>" + r.eN.toFixed(3) + "</td><td>" + r.eC.toFixed(3) + "</td><td>" + (r.dE >= 0 ? "+" : "") + r.dE.toFixed(3) + "</td></tr>";
+    plane($("plane"), [{ x: r.dE, y: r.dC }], p.wtp, true);
+    return r;
+  }
+
+  /* ---------- CE plane ---------- */
+  function plane(el, pts, wtp, big) {
+    var W = 720, H = 320, m = { l: 70, r: 16, t: 14, b: 40 };
+    var xm = Math.max(0.05, Math.max.apply(null, pts.map(function (q) { return Math.abs(q.x); })) * 1.3), ym = Math.max(1000, Math.max.apply(null, pts.map(function (q) { return Math.abs(q.y); })) * 1.3);
+    ym = Math.max(ym, wtp * xm * 0.4);
+    function X(x) { return m.l + (x + xm) / (2 * xm) * (W - m.l - m.r); } function Y(y) { return m.t + (ym - y) / (2 * ym) * (H - m.t - m.b); }
+    var g = '<svg viewBox="0 0 ' + W + " " + H + '" width="100%" role="img" aria-label="Cost-effectiveness plane" style="display:block;max-width:100%;height:auto">';
+    g += '<line x1="' + X(-xm) + '" x2="' + X(xm) + '" y1="' + Y(0) + '" y2="' + Y(0) + '" stroke="#c7c7cc"/><line x1="' + X(0) + '" x2="' + X(0) + '" y1="' + Y(ym) + '" y2="' + Y(-ym) + '" stroke="#c7c7cc"/>';
+    var x1 = Math.max(-xm, -ym / Math.max(wtp, 1)), x2 = Math.min(xm, ym / Math.max(wtp, 1));
+    g += '<line x1="' + X(x1) + '" x2="' + X(x2) + '" y1="' + Y(wtp * x1) + '" y2="' + Y(wtp * x2) + '" stroke="#b3261e" stroke-dasharray="5 4"/>';
+    [["NE", xm * 0.55, ym * 0.85], ["NW · dominated", -xm * 0.55, ym * 0.85], ["SE · dominant", xm * 0.55, -ym * 0.85], ["SW", -xm * 0.55, -ym * 0.85]].forEach(function (q) { g += '<text x="' + X(q[1]) + '" y="' + Y(q[2]) + '" text-anchor="middle" font-size="11" fill="#aeaeb2">' + q[0] + "</text>"; });
+    [-1, -0.5, 0, 0.5, 1].forEach(function (f) { g += '<text x="' + X(f * xm) + '" y="' + (H - m.b + 16) + '" text-anchor="middle" font-size="10.5" fill="#6e6e73">' + (f * xm).toFixed(2) + '</text><text x="' + (m.l - 6) + '" y="' + (Y(f * ym) + 4) + '" text-anchor="end" font-size="10.5" fill="#6e6e73">' + money(f * ym) + "</text>"; });
+    g += '<text x="' + ((m.l + W - m.r) / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" fill="#6e6e73">Incremental QALYs</text>';
+    pts.forEach(function (q) { g += '<circle cx="' + X(q.x) + '" cy="' + Y(q.y) + '" r="' + (big ? 6 : 1.8) + '" fill="' + (q.y <= wtp * q.x ? "#1a7f4e" : "#b3261e") + '" opacity="' + (big ? 1 : 0.45) + '"/>'; });
+    el.innerHTML = g + "</svg>";
+  }
+
+  /* ---------- scenarios ---------- */
+  var PRESETS = [
+    { name: "A · Price −25%", f: function () { p.txNew = Math.round(p.txNew * 0.75); } },
+    { name: "B · Bigger QALY gain", f: function () { p.uNew = Math.min(1, +(p.uNew + 0.04).toFixed(3)); } },
+    { name: "C · Comparator other costs +30%", f: function () { p.othComp = Math.round(p.othComp * 1.3); } },
+    { name: "D · WTP $30k → $100k", f: function () { p.wtp = p.wtp >= 100000 ? 30000 : 100000; } },
+    { name: "E · Run uncertainty (PSA)", f: null }
+  ];
+  PRESETS.forEach(function (pr) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = pr.name;
+    b.addEventListener("click", function () {
+      if (!pr.f) { runPSA(); $("psa-plane").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+      p = Object.assign({}, BASE); pr.f(); saveScenario(pr.name + " (vs base case)"); renderInputs(); renderGlobals(); renderAll();
+    });
+    $("presets").appendChild(b);
+  });
+  function saveScenario(name) { scenarios.push({ name: name, p: Object.assign({}, p), r: model(p) }); renderScenarios(); }
+  function renderScenarios() {
+    $("scen-table").innerHTML = "<tr><th>Scenario</th><th>ΔCost</th><th>ΔQALYs</th><th>ICER</th><th>INMB @ its WTP</th><th>WTP</th><th></th></tr>" + scenarios.map(function (s, i) {
+      return "<tr><td><b style='color:var(--ink)'>" + esc(s.name) + "</b></td><td>" + money(s.r.dC) + "</td><td>" + s.r.dE.toFixed(3) + "</td><td>" + icerText(s.r) + "</td><td style='color:" + (s.r.inmb >= 0 ? "var(--good)" : "var(--bad)") + ";font-weight:700'>" + money(s.r.inmb) + "</td><td>" + money(s.p.wtp) + '</td><td><button class="btn" data-load="' + i + '" type="button">Load</button></td></tr>';
+    }).join("");
+    $("scen-table").querySelectorAll("[data-load]").forEach(function (b) { b.addEventListener("click", function () { p = Object.assign({}, scenarios[+b.dataset.load].p); renderInputs(); renderGlobals(); renderAll(); }); });
+  }
+  $("save-scen").addEventListener("click", function () { saveScenario($("scen-name").value.trim() || "Custom scenario " + (scenarios.length + 1)); $("scen-name").value = ""; });
+  $("reset").addEventListener("click", function () { p = Object.assign({}, BASE); renderInputs(); renderGlobals(); renderAll(); });
+
+  /* ---------- one-way SA + thresholds ---------- */
+  var OW = [
+    { k: "txNew", label: "New treatment price (annual)", money: true }, { k: "txComp", label: "Comparator price (annual)", money: true },
+    { k: "othNew", label: "Other costs, new (annual)", money: true }, { k: "othComp", label: "Other costs, comparator (annual)", money: true },
+    { k: "uNew", label: "Utility, new", u: true }, { k: "uComp", label: "Utility, comparator", u: true },
+    { k: "durNew", label: "Treatment duration, new (y)" }, { k: "H", label: "Time horizon (y)" }, { k: "rc", label: "Discount rate, costs (%)" }, { k: "ro", label: "Discount rate, outcomes (%)" }
+  ];
+  var owRange = {};
+  function defaultRange(o) { var v = p[o.k]; if (o.u) return [Math.max(0, +(v - 0.05).toFixed(3)), Math.min(1, +(v + 0.05).toFixed(3))]; if (o.k === "rc" || o.k === "ro") return [0, 6]; return [+(v * 0.8).toFixed(2), +(v * 1.2).toFixed(2)]; }
+  function threshold(o) { // bisection over a wide range for INMB = 0
+    var lo = o.u ? 0 : 0, hi = o.u ? 1 : (o.money ? Math.max(1, p[o.k]) * 20 : o.k === "rc" || o.k === "ro" ? 30 : 60);
+    function f(v) { var q = Object.assign({}, p); q[o.k] = v; return model(q).inmb; }
+    var flo = f(lo), fhi = f(hi); if (flo * fhi > 0) return null;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2, fm = f(mid); if (flo * fm <= 0) { hi = mid; } else { lo = mid; flo = fm; } }
+    return (lo + hi) / 2;
+  }
+  function renderOW() {
+    var base = model(p).inmb;
+    var res = OW.map(function (o) {
+      var rg = owRange[o.k] || defaultRange(o); var ql = Object.assign({}, p), qh = Object.assign({}, p); ql[o.k] = rg[0]; qh[o.k] = rg[1];
+      return { o: o, rg: rg, lo: model(ql).inmb, hi: model(qh).inmb, thr: threshold(o) };
+    });
+    $("ow").innerHTML = "<tr><th>Parameter</th><th>Current</th><th>Low</th><th>High</th><th>INMB at low / high</th><th>INMB = 0 when…</th></tr>" + res.map(function (r) {
+      var cur = r.o.money ? money(p[r.o.k]) : p[r.o.k];
+      var thr = r.thr == null ? "doesn't cross within range" : (r.o.money ? money(r.thr) : r.o.u ? r.thr.toFixed(3) : r.thr.toFixed(2));
+      return "<tr><td><b style='color:var(--ink)'>" + r.o.label + "</b></td><td>" + cur + '</td><td><input class="ow-in" type="number" step="any" data-k="' + r.o.k + '" data-i="0" value="' + r.rg[0] + '"></td><td><input class="ow-in" type="number" step="any" data-k="' + r.o.k + '" data-i="1" value="' + r.rg[1] + '"></td><td>' + money(r.lo) + " / " + money(r.hi) + "</td><td>" + thr + "</td></tr>";
+    }).join("");
+    $("ow").querySelectorAll(".ow-in").forEach(function (inp) { inp.addEventListener("change", function () { var o = OW.find(function (x) { return x.k === inp.dataset.k; }); var rg = (owRange[o.k] || defaultRange(o)).slice(); rg[+inp.dataset.i] = parseFloat(inp.value); owRange[o.k] = rg; renderOW(); }); });
+    res.sort(function (a, b) { return Math.abs(b.hi - b.lo) - Math.abs(a.hi - a.lo); });
+    var mx = Math.max.apply(null, res.map(function (r) { return Math.max(Math.abs(r.lo - base), Math.abs(r.hi - base)); })) || 1;
+    $("tornado").innerHTML = '<div class="note" style="margin-bottom:6px">Tornado: INMB range per parameter (current INMB ' + money(base) + '). Light = low value, dark = high value. Sorted by width, so the top bars are the assumptions that drive the result.</div>' + res.map(function (r) {
+      function seg(v, dark) { var d = v - base, w = Math.min(50, Math.abs(d) / mx * 50), left = d >= 0 ? 50 : 50 - w; return '<span style="left:' + left + "%;width:" + w + "%;background:" + (dark ? "var(--accent)" : "#8fb8ef") + '"></span>'; }
+      return '<div class="bar-row"><span>' + r.o.label + '</span><div class="bar-wrap"><div class="mid"></div>' + seg(r.lo, 0) + seg(r.hi, 1) + '</div><span class="bar-num" style="font-size:11px">' + money(Math.abs(r.hi - r.lo)) + "</span></div>";
+    }).join("");
+  }
+
+  /* ---------- PSA ---------- */
+  slider($("psa-ctl"), { key: "seCost", label: "Cost uncertainty (SE as % of mean)", min: 5, max: 50, step: 1, fmt: function (v) { return v + "%"; } }, psa, function () {});
+  slider($("psa-ctl"), { key: "seU", label: "Utility uncertainty (SE, absolute)", min: 0.005, max: 0.1, step: 0.005, fmt: function (v) { return v.toFixed(3); } }, psa, function () {});
+  function gammaDraw(rng, mean, se) { if (mean <= 0) return 0; var k = (mean * mean) / (se * se), th = (se * se) / mean; return randGamma(rng, k, th); }
+  function betaDraw(rng, mean, se) {
+    mean = Math.min(0.999, Math.max(0.001, mean)); var v = se * se, maxV = mean * (1 - mean) * 0.99; v = Math.min(v, maxV);
+    var s = mean * (1 - mean) / v - 1, a = mean * s, b = (1 - mean) * s, x = randGamma(rng, a, 1), y = randGamma(rng, b, 1); return x / (x + y);
+  }
+  var lastPSA = null;
+  function runPSA() {
+    var rng = makeRng(424242), N = 2000, draws = [];
+    for (var i = 0; i < N; i++) {
+      var q = Object.assign({}, p);
+      ["txNew", "txComp", "othNew", "othComp"].forEach(function (k) { q[k] = gammaDraw(rng, p[k], p[k] * psa.seCost / 100); });
+      q.uNew = betaDraw(rng, p.uNew, psa.seU); q.uComp = betaDraw(rng, p.uComp, psa.seU);
+      var r = model(q); draws.push({ x: r.dE, y: r.dC });
+    }
+    lastPSA = draws;
+    var mC = draws.reduce(function (a, d) { return a + d.y; }, 0) / N, mE = draws.reduce(function (a, d) { return a + d.x; }, 0) / N;
+    var inmb = draws.map(function (d) { return p.wtp * d.x - d.y; }), pPos = inmb.filter(function (v) { return v > 0; }).length / N, mI = inmb.reduce(function (a, b) { return a + b; }, 0) / N;
+    $("psa-kpis").innerHTML = kpi("Mean ΔCost", money(mC), "across 2,000 draws") + kpi("Mean ΔQALYs", mE.toFixed(3), "across 2,000 draws") + kpi("Mean INMB", money(mI), "at " + money(p.wtp) + "/QALY", mI > 0 ? "good" : "bad") + kpi("Share of draws with INMB > 0", Math.round(pPos * 100) + "%", "at the selected threshold", pPos >= 0.5 ? "good" : "warn");
+    plane($("psa-plane"), draws, p.wtp, false);
+    var ce = []; for (var w = 0; w <= 150000; w += 5000) { ce.push([w / 1000, draws.filter(function (d) { return w * d.x - d.y > 0; }).length / N * 100]); }
+    lineChart($("ceac"), [{ points: ce, color: "#0071e3" }], { xMax: 150, yMax: 100, xLabel: "Willingness to pay ($ thousand per QALY)", yLabel: "% of draws with INMB > 0", vlines: [{ x: p.wtp / 1000, label: "Selected WTP" }], yFmt: function (v) { return Math.round(v) + "%"; }, title: "CEAC" });
+    histogram($("inmb-hist"), inmb, { bins: 36, xLabel: "Incremental net monetary benefit ($)", xFmt: money, marks: [{ x: 0, label: "INMB = 0", color: "#1d1d1f" }, { x: mI, label: "Mean", color: "#0071e3" }], colorFn: function (x) { return x > 0 ? "#1a7f4e" : "#b3261e"; }, title: "INMB distribution" });
+    $("psa-note").textContent = "Done: 2,000 seeded draws using the current assumptions.";
+  }
+  $("psa-run").addEventListener("click", runPSA);
+
+  function renderAll() { renderResults(); renderOW(); if (lastPSA) $("psa-note").textContent = "Assumptions changed since the last PSA. Run again to update."; }
+  window.__heor = { model: model, quadrant: quadrant, threshold: function (k) { return threshold(OW.find(function (o) { return o.k === k; })); }, setP: function (q) { Object.assign(p, q); }, getP: function () { return p; }, runPSA: runPSA, getPSA: function () { return lastPSA; } };
+  renderInputs(); renderGlobals(); renderAll(); saveScenario("Base case"); runPSA();
+})();
+</script>
+</body>
+</html>
